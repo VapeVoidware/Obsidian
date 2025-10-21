@@ -2,6 +2,13 @@ local cloneref = (cloneref or clonereference or function(instance: any)
     return instance
 end)
 
+if shared.CLONEREF_BACKUP_MODE then
+    if shared.VoidDev then warn("clone backup mode") end
+    cloneref = function(instance: any)
+        return instance
+    end
+end
+
 local CoreGui: CoreGui = cloneref(game:GetService("CoreGui"))
 local Players: Players = cloneref(game:GetService("Players"))
 local RunService: RunService = cloneref(game:GetService("RunService"))
@@ -10,6 +17,7 @@ local UserInputService: UserInputService = cloneref(game:GetService("UserInputSe
 local TextService: TextService = cloneref(game:GetService("TextService"))
 local Teams: Teams = cloneref(game:GetService("Teams"))
 local TweenService: TweenService = cloneref(game:GetService("TweenService"))
+local GuiService: GuiService = cloneref(game:GetService("GuiService"))
 
 local getgenv = getgenv or function()
     return shared
@@ -21,7 +29,25 @@ local gethui = gethui or function()
 end
 
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
-local Mouse = cloneref(LocalPlayer:GetMouse())
+local Mouse
+--local Mouse = cloneref(LocalPlayer:GetMouse())
+if shared.CLONEREF_BACKUP_MODE then
+    Mouse = setmetatable({}, {
+        __tostring = function()
+            return tostring(UserInputService:GetMouseLocation() - GuiService:GetGuiInset())
+        end,
+        __index = function(_, key)
+            if key == "X" or key == "Y" then
+                local position = UserInputService:GetMouseLocation() - GuiService:GetGuiInset()
+                return position[key]
+            elseif key == "Position" then
+                return UserInputService:GetMouseLocation() - GuiService:GetGuiInset()
+            end
+        end
+    })
+else
+    Mouse = cloneref(LocalPlayer:GetMouse())
+end
 
 local Labels = {}
 local Buttons = {}
